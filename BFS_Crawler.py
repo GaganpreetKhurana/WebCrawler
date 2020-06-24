@@ -34,6 +34,7 @@ def crawler(startURL,limit):
   assert isinstance(startURL,str),'URL Not in string format'
   visited=set()
   listOfLinks=[]
+  print("Press Ctrl-C to Stop Crawling before limit\n")
   print("Crawling Started\n")
   queue=deque()
   queue.append(startURL)
@@ -41,27 +42,32 @@ def crawler(startURL,limit):
   visited.add(startURL)
   depth=0
   while len(queue)>0 and (len(listOfLinks)<limit or limit==-1):
-    url=queue[0]
-    queue.popleft()
-    if url=='-1':
-      depth+=1
-      if(len(queue)!=0):
-        queue.append('\n')
-      continue
     try:
-      print("Trying To parse {}".format(url))
-      htmlCode=requests.get(url).text
-      print("Completed Parsing {}\n".format(url))
-    except:
-      print("Unable To parse {}\n".format(url))
-      continue
-    Link=link(url,depth)
-    Link.extractDetails(htmlCode)
-    listOfLinks.append(Link)
-    for eachLink in Link.linksOnPage:
-      if eachLink not in visited:
-        queue.append(eachLink)
-        visited.add(eachLink)
+      url=queue[0]
+      queue.popleft()
+      if url=='-1':
+        depth+=1
+        if(len(queue)!=0):
+          queue.append('\n')
+        continue
+      try:
+        print("Trying To parse {}".format(url))
+        htmlCode=requests.get(url).text
+        print("Completed Parsing {}\n".format(url))
+      except:
+        print("Unable To parse {}\n".format(url))
+        continue
+      Link=link(url,depth)
+      Link.extractDetails(htmlCode)
+      listOfLinks.append(Link)
+      for eachLink in Link.linksOnPage:
+        if eachLink not in visited:
+          queue.append(eachLink)
+          visited.add(eachLink)
+    except KeyboardInterrupt:
+      print("Crawling Stopped\n")
+      return listOfLinks
+      
   print("Finished Crawling\n")
   return listOfLinks
 
@@ -70,5 +76,6 @@ if __name__=='__main__':
   maxNumberOfLinksToParse=int(input("Enter Max number of Links to parse(-1 for No Limit): "))
   listOfLinks=crawler(startURL,maxNumberOfLinksToParse)
   print("Result")
+  print("Total Pages Parsed: {}\n".format(len(listOfLinks)))
   for link in listOfLinks:
     print("URL: {}\nDepth: {}\nMost Frequent Word: {}\nNumber of Links on Page: {}\n".format(link.url,link.depth,link.mostFrequentWord,len(link.linksOnPage)))
